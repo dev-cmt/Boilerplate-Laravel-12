@@ -50,6 +50,15 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
+        // 🟢 Add extra single permission's
+        $extraPermissions = [
+            'view reports'
+        ];
+        foreach ($extraPermissions as $perm) {
+            Permission::firstOrCreate(['name' => $perm]);
+        }
+        $permissions = array_merge($permissions, $extraPermissions);
+
         // -------------------------------
         // 4️⃣ Create Roles
         // -------------------------------
