@@ -10,7 +10,17 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PageSeoController;
 use App\Http\Controllers\PricingPlanController;
 use App\Http\Controllers\DeveloperApiController;
+use App\Http\Controllers\SitemapController;
 
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/cc', function () {
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:cache');
+    return 'Cleared!';
+});
 
 Route::get('/', [HomeController::class, 'welcome'])->name('home');
 Route::get('/page/frodly', [HomeController::class, 'pageFrodly'])->name('page.frodly'); // Not used
