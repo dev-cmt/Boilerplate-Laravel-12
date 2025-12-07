@@ -21,6 +21,8 @@ Route::get('/cc', function () {
     \Illuminate\Support\Facades\Artisan::call('config:cache');
     return 'Cleared!';
 });
+Route::get('/sync-permissions', [AdminController::class, 'resyncPermissions'])->name('sync.permissions');
+
 
 Route::get('/', [HomeController::class, 'welcome'])->name('home');
 Route::get('/page/frodly', [HomeController::class, 'pageFrodly'])->name('page.frodly'); // Not used
