@@ -13,9 +13,34 @@ class UserController extends Controller
     // List users
     public function index()
     {
-        $users = User::with('roles')->latest()->paginate(10);
+        $users = User::with('roles')->latest()->get();
         $roles = Role::all();
-        return view('backend.users.index', compact('users', 'roles'));
+        return view('backEnd.users.index', compact('users', 'roles'));
+    }
+
+    // Create new User
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'role' => 'required|exists:roles,name',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+        ]);
+
+        $user = new User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+
+        if ($request->hasFile('photo')) {
+            $user->photo_path = ImageHelper::uploadImage($request->file('photo'), 'uploads/profile');
+        }
+        $user->save();
+        $user->assignRole($request->role);
+
+        return redirect()->back()->with('success', 'User created successfully.');
     }
 
     // Update user
@@ -31,29 +56,24 @@ class UserController extends Controller
 
         $user = User::findOrFail($request->id);
 
-        // Upload new photo if provided
         if ($request->hasFile('photo')) {
-            $photoPath = ImageHelper::uploadImage($request->file('photo'), 'uploads/profile', $user->photo_path);
-            $user->photo_path = $photoPath;
+            $user->photo_path = ImageHelper::uploadImage($request->file('photo'), 'uploads/profile', $user->photo_path);
         }
 
-        // Update basic info
         $user->name = $request->name;
         $user->email = $request->email;
         $user->save();
 
-        // Sync role
         $user->syncRoles([$request->role]);
 
         return redirect()->back()->with('success', 'User updated successfully.');
     }
 
-    // Delete user
+    // Delete User
     public function destroy($id)
     {
         $user = User::findOrFail($id);
 
-        // Delete photo if exists
         ImageHelper::deleteImage($user->photo_path);
 
         $user->delete();

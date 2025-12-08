@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
 
     // User Management
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::post('/users/store', [UserController::class, 'store'])->name('users.store');
     Route::post('/users/update', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 

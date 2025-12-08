@@ -41,8 +41,8 @@ class ProfileController extends Controller
         $user->phone = $request->phone;
 
         // Handle profile photo upload
-        if ($request->hasFile('photo')) {
-            $photoPath = ImageHelper::uploadImage($request->file('photo'), 'uploads/profile', $user->photo_path);
+        if ($request->hasFile('photo_path')) {
+            $photoPath = ImageHelper::uploadImage($request->file('photo_path'), 'uploads/profile', $user->photo_path);
             $user->photo_path = $photoPath;
         }
 

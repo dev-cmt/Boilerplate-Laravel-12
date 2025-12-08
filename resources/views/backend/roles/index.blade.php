@@ -61,11 +61,16 @@
                                         </a>
                                         <br>
 
-                                        <a href="javascript:void(0);" onclick="deleteForm({{ $item->id }})"
-                                            title="Delete" class="badge bg-outline-danger btn_delete mb-1 w-100">Delete</a>
+                                        <form action="{{ route('roles.destroy', $item->id) }}" method="POST"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="badge bg-outline-danger mb-1 w-100"
+                                                onclick="return confirm('Are you sure?')">
+                                                Delete
+                                            </button>
+                                        </form>
                                     </td>
-
-
                                 </tr>
                             @endforeach
                         @else
@@ -79,7 +84,7 @@
             {{-- {{ $departments->links('backEnd.pagination.paginate') }} --}}
         </div>
     </div>
-    
+
     @push('js')
         <!-- Sweetalerts JS -->
         <script src="{{ asset('backEnd/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>

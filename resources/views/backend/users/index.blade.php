@@ -5,8 +5,7 @@
         <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap.min.css">
         <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap5.min.css">
 
-        <!-- Select2 CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="{{ asset('backend/libs/select2/select2.min.css') }}">
         <style>
             .select2-container--open {
                 z-index: 100000 !important;
@@ -21,7 +20,7 @@
             <nav>
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Users</li>
+                    <li class="breadcrumb-item active">Users</li>
                 </ol>
             </nav>
         </div>
@@ -30,13 +29,14 @@
     <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
-                <div class="card-header justify-content-between">
+                <div class="card-header justify-content-between d-flex align-items-center">
                     <div class="card-title">Users List</div>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">Add
+                        User</button>
                 </div>
                 <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show">
-                            {{ session('success') }}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
@@ -55,91 +55,141 @@
                             </thead>
                             <tbody>
                                 @forelse($users as $key => $user)
-                                <tr class="{{ $user->id == 1 ? 'd-none' : ''}}">
-                                    <td>{{ $key++ }}</td>
-                                    <td>
-                                        @if($user->photo_path)
-                                            <img src="{{ asset($user->photo_path) }}" alt="photo" class="rounded-circle" width="40" height="40">
-                                        @else
-                                            <span class="badge bg-secondary">No Photo</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $user->name }}</td>
-                                    <td>{{ $user->email }}</td>
-                                    <td>{{ $user->roles->pluck('name')->first() ?? '-' }}</td>
-                                    <td>
-                                        <div class="btn-list">
-                                            <button type="button" class="btn btn-sm btn-warning-light btn-icon edit-user"
-                                                data-id="{{ $user->id }}"
-                                                data-name="{{ $user->name }}"
-                                                data-email="{{ $user->email }}"
-                                                data-role="{{ $user->roles->pluck('name')->first() ?? '' }}"
-                                                data-photo="{{ $user->photo_path }}"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editUserModal">
-                                                <i class="ri-pencil-line"></i>
-                                            </button>
-                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger-light btn-icon" onclick="return confirm('Are you sure you want to delete this user?')">
-                                                    <i class="ri-delete-bin-line"></i>
+                                    <tr>
+                                        <td>{{ $key + 1 }}</td>
+                                        <td>
+                                            @if ($user->photo_path)
+                                                <img src="{{ asset($user->photo_path) }}" class="rounded-circle"
+                                                    width="40" height="40">
+                                            @else
+                                                <span class="badge bg-secondary">No Photo</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $user->name }}</td>
+                                        <td>{{ $user->email }}</td>
+                                        <td>{{ $user->roles->pluck('name')->first() ?? '-' }}</td>
+                                        <td>
+                                            <div class="btn-list">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-warning-light btn-icon edit-user"
+                                                    data-id="{{ $user->id }}" data-name="{{ $user->name }}"
+                                                    data-email="{{ $user->email }}"
+                                                    data-role="{{ $user->roles->pluck('name')->first() ?? '' }}"
+                                                    data-photo="{{ $user->photo_path }}" data-bs-toggle="modal"
+                                                    data-bs-target="#editUserModal">
+                                                    <i class="ri-pencil-line"></i>
                                                 </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger-light btn-icon"
+                                                        onclick="return confirm('Are you sure?')">
+                                                        <i class="ri-delete-bin-line"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="6" class="text-center">No users found.</td>
-                                </tr>
+                                    <tr>
+                                        <td colspan="7" class="text-center">No users found.</td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $users->links() }}
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit User Modal -->
-    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title" id="editUserModalLabel">Edit User</h6>
+                    <h6 class="modal-title">Add User</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('users.update') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" id="edit_id" name="id">
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="edit_name" class="form-label">Name</label>
-                                <input type="text" class="form-control" id="edit_name" name="name" required>
+                                <label class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="edit_email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="edit_email" name="email" required>
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="edit_role" class="form-label">Role</label>
-                                <select class="form-select select2" id="edit_role" name="role">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" name="password_confirmation" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Role</label>
+                                <select name="role" class="form-select select2" required>
                                     <option value="" disabled selected>Select role</option>
-                                    @foreach($roles as $role)
+                                    @foreach ($roles as $role)
                                         <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label for="edit_photo" class="form-label">Photo</label>
-                                <input type="file" class="form-control" id="edit_photo" name="photo">
-                                <small class="text-muted">Upload new photo to replace existing.</small>
+                                <label class="form-label">Photo</label>
+                                <input type="file" name="photo" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer mt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Edit User</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('users.update') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="id" id="edit_id">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control" id="edit_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" id="edit_email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Role</label>
+                                <select name="role" class="form-select select2" id="edit_role">
+                                    <option value="" disabled selected>Select role</option>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Photo</label>
+                                <input type="file" name="photo" class="form-control" id="edit_photo">
                                 <div class="mt-2" id="current_photo_preview"></div>
                             </div>
                         </div>
@@ -153,65 +203,52 @@
         </div>
     </div>
 
-
-
     @push('js')
-    <!-- Datatables Cdn -->
-    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.6/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <!-- Datatables Cdn -->
+        <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.6/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-    <!-- Internal Datatables JS -->
-    <script src="{{ asset('backend/js/datatables.js') }}"></script>
+        <!-- Internal Datatables JS -->
+        <script src="{{ asset('backend/js/datatables.js') }}"></script>
 
-    <!-- Select 2 Cdn -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function(){
-            // Initialize Select2
-            function initSelect2() {
+        <script src="{{ asset('backend/libs/select2/select2.min.js') }}"></script>
+        <script>
+            $(document).ready(function() {
+                // Initialize Select2
                 $('select.select2').select2({
-                    placeholder: "Select role", // placeholder text
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#editUserModal') // fixes modal dropdown issue
+                    width: '100%'
                 });
-            }
-            initSelect2();
 
-            // Populate edit modal with user data
-            $(document).on('click', '.edit-user', function() {
-                const id = $(this).data('id');
-                const name = $(this).data('name');
-                const email = $(this).data('email');
-                const role = $(this).data('role'); // may be empty
-                const photo = $(this).data('photo');
+                // Populate edit modal
+                $(document).on('click', '.edit-user', function() {
+                    const id = $(this).data('id');
+                    const name = $(this).data('name');
+                    const email = $(this).data('email');
+                    const role = $(this).data('role');
+                    const photo = $(this).data('photo');
 
-                $('#edit_id').val(id);
-                $('#edit_name').val(name);
-                $('#edit_email').val(email);
-
-                // Set role value for Select2
-                if(role) {
+                    $('#edit_id').val(id);
+                    $('#edit_name').val(name);
+                    $('#edit_email').val(email);
                     $('#edit_role').val(role).trigger('change');
-                } else {
-                    $('#edit_role').val(null).trigger('change'); // show placeholder
-                }
 
-                if(photo) {
-                    $('#current_photo_preview').html(`<img src="{{ asset('/') }}${photo}" alt="photo" class="rounded-circle" width="40" height="40">`);
-                } else {
-                    $('#current_photo_preview').html('');
-                }
+                    if (photo) {
+                        $('#current_photo_preview').html(
+                            `<img src="{{ asset('/') }}${photo}" class="rounded-circle" width="40" height="40">`
+                            );
+                    } else {
+                        $('#current_photo_preview').html('');
+                    }
+                });
             });
-        });
-    </script>
-
+        </script>
     @endpush
+
 </x-backend-layout>
