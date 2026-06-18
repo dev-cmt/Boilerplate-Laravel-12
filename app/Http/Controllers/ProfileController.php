@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Helpers\ImageHelper;
 
 class ProfileController extends Controller
 {
